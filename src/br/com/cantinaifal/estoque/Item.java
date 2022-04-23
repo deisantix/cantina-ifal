@@ -1,4 +1,4 @@
-package br.com.cantinaifal;
+package br.com.cantinaifal.estoque;
 
 public class Item {
 
@@ -6,18 +6,14 @@ public class Item {
     private String descricao;
     private double precoCompra;
     private double precoVenda;
-    // private int qtdComprada;
-    // private int qtdVendida;
 
     public  Item(String nome, String descricao, double precoCompra, double precoVenda) {
-        if(nome == null) {
+        if(nome == "") {
             throw new IllegalArgumentException("Nome inválido");
-        } else if (descricao == null) {
-            throw new IllegalArgumentException("Descrição inválida");
-        } else if (precoCompra <= 0) {
-            throw new IllegalArgumentException("Preço de compra inválido");
+        } else if (precoCompra <= 0 || precoVenda <= 0) {
+            throw new IllegalArgumentException("Preço de compra ou venda inválido");
         } else if (precoVenda < precoCompra) {
-            throw new IllegalArgumentException("Preco de venda inválido");
+            throw new IllegalArgumentException("Preço de venda menor que preço de compra");
         }
 
         this.nome = nome;
