@@ -7,6 +7,8 @@ import java.util.stream.*;
 public class Estoque {
     // coleção que armazena todos os itens do estoque
     private Map<String, ArrayList<Item>> estoqueMapa;
+    private Map<String, ArrayList<Item>> itensVendidos;
+    private Map<String, ArrayList<Item>> itensBaixados;
     // atributo que armazena a senha
     private String senhaAdmin;
     // esse atributo é usado para saber se há um administrador (tem a senha definida)
@@ -14,12 +16,34 @@ public class Estoque {
     // esse atributo é para saber se a pessoa usando está com o acesso do admin
     private boolean acessoAdmin = false;
 
+
     public Estoque() {
         // construtor
         // TreeMap para que se fique mais fácil de ordenar na hora da impressão
-        this.estoqueMapa = new TreeMap<String, ArrayList<Item>>();
+        this.estoqueMapa = new HashMap<String, ArrayList<Item>>();
+        this.itensVendidos = new HashMap<String, ArrayList<Item>>();
+        this.itensBaixados = new HashMap<String, ArrayList<Item>>();
+
+        // inicializando itens no estoque para que fique mais fácil de testar o programa
+        this.adicionarItem("Agua", "Uma garrafinha de água", 2.50, 3.50, 10);
+        this.adicionarItem("Coxinha", "Coxinha de frango", 3, 5, 3);
+        this.adicionarItem("Amendoim", "500g de amendoim", 10, 12.50, 50);
+        this.adicionarItem("Sanduiche", "Um sanduba para matar sua fome", 5, 6.70, 5);
+        this.adicionarItem("Bolo de chocolate", "Uma fatia apenas", 3.50, 4.50, 12);
+
     }
 
+    public Map<String, ArrayList<Item>> getEstoqueMapa() {
+        return this.estoqueMapa;
+    }
+
+    public Map<String, ArrayList<Item>> getItensVendidos() {
+        return this.itensVendidos;
+    }
+
+    public Map<String, ArrayList<Item>> getItensBaixados() {
+        return this.itensBaixados;
+    }
 
     public boolean getTemAdmin() {
         return this.temAdmin;
@@ -78,8 +102,8 @@ public class Estoque {
         double precoVenda
     ) throws IllegalArgumentException {
         // método adicionarItem que adiciona o item na coleção
-        Item item = new Item(nome, descricao, precoCompra, precoVenda);
 
+        Item item = new Item(nome, descricao, precoCompra, precoVenda);
         // se o item for criado com sucesso
         // não precisa de if, pois o método é interrompido no momento do erro (caso tenha)
         String nomeItem = item.getNome();
@@ -106,26 +130,30 @@ public class Estoque {
         }
     }
 
-    public void mostrarEstoquePorNome() {
+    public Map<String, Integer> retornarEstoquePorNome() throws NullPointerException {
         // mostra os itens disponíveis no estoque por nome
+        Map<String, Integer> novoMapa = new TreeMap<>();
+
         if(this.estoqueMapa.size() == 0) {
-            System.out.println("Parece que o estoque está vazio...");
-            return;
+            throw new NullPointerException("Parece que o estoque está vazio...");
         }
 
-        for(String key : this.estoqueMapa.keySet()) {
-            System.out.println(key + ": " + this.estoqueMapa.get(key).size());
+        for(String itemNoEstoque : this.estoqueMapa.keySet()) {
+            novoMapa.put(
+                itemNoEstoque, 
+                this.estoqueMapa.get(itemNoEstoque).size()
+            );
         }
 
+        return novoMapa;
     }
 
-    public void mostrarEstoquePorQuantidade() {
+    public Map<String, Integer> retornarEstoquePorQuantidade() throws NullPointerException {
         // mostra os itens disponíveis no estoque por quantidade
-        if(this.estoqueMapa.size() == 0) {
-            System.out.println("Parece que o estoque está vazio...");
-            return;
-        }
 
+        if(this.estoqueMapa.size() == 0) {
+            throw new NullPointerException("Parece que o estoque está vazio...");
+        }
         Map<String, Integer> mapaQuantidade = new HashMap<>();
         
         for(String item : this.estoqueMapa.keySet()) {
@@ -151,14 +179,64 @@ public class Estoque {
                 (e1, e2) -> e1, LinkedHashMap::new
             ));
 
-
-        for(String item : mapaOrdenado.keySet()) {
-            System.out.println(item + ": " + mapaOrdenado.get(item));
-        }
+        return mapaOrdenado;
     }
     
-    public void baixarItem(String nomeDoItem) {
+    public Map<String, Integer> retornarEstoqueEmBaixaQuantidade() throws NullPointerException {
+        Map<String, Integer> mapaOrdenado = this.retornarEstoquePorQuantidade();
+        Map<String, Integer> novoMapa = new LinkedHashMap<>();
+
+        if(this.estoqueMapa.size() == 0) {
+            throw new NullPointerException("Parece que o estoque está vazio...");
+        }
+
+        for(String itemBQ : mapaOrdenado.keySet()) {
+            if(mapaOrdenado.get(itemBQ) <= 50) {
+                novoMapa.put(itemBQ, mapaOrdenado.get(itemBQ));
+            }
+        }
+        return novoMapa;
+    }
+
+    public Map<String, ArrayList<Item>> retornarResumoLucro() throws NullPointerException {
+        if(this.itensBaixados.size() == 0) {
+            throw new NullPointerException("Não foi dado baixa em nenhum item no estoque...");
+        }
+        return this.itensBaixados;
+    }
+
+    public void comprarItemNoEstoque(String itemEscolhido, int quantidadeEscolhida) {
+        if(this.itensVendidos.get(itemEscolhido) == null) {
+            this.itensVendidos.put(itemEscolhido, new ArrayList<Item>());
+        }
+        // primeiro for loop para transferir os itens de uma lista para outra
+        for(int i = 0; i < quantidadeEscolhida; i++) {
+            Item itemTransferido = this.estoqueMapa.get(itemEscolhido).get(i);
+            this.itensVendidos.get(itemEscolhido).add(itemTransferido);
+        }
+        // segundo for loop para remover os itens que foram vendidod de estoqueMapa
+        for(int i = 0; i < quantidadeEscolhida; i++) {
+            this.estoqueMapa.get(itemEscolhido).remove(0);
+
+            if(this.estoqueMapa.get(itemEscolhido).size() == 0) {
+                this.estoqueMapa.remove(itemEscolhido);
+            }
+        }
+    }
+
+    public void baixarItens() {
         // baixa um item
+
+        // primeiro for loop para transferir os itens de uma lista para outra
+        for(String item : this.itensVendidos.keySet()) {
+            ArrayList<Item> itensTransferidos = this.itensVendidos.get(item);
+            this.itensBaixados.put(item, itensTransferidos);
+        }
+        // segundo for loop para remover os itens de itensVendidos
+        // usando itensBaixados para iterar para evitar ConcurrentModificationException
+        for(String item : this.itensBaixados.keySet()) {
+            this.itensVendidos.remove(item);
+        }
     }
     
 }
