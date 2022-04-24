@@ -130,25 +130,25 @@ public class Estoque {
         }
     }
 
-    public Map<String, Integer> retornarEstoquePorNome() throws NullPointerException {
+    public Map<String, ArrayList<Item>> retornarEstoquePorNome() throws NullPointerException {
         // mostra os itens disponíveis no estoque por nome
-        Map<String, Integer> novoMapa = new TreeMap<>();
-
+        
         if(this.estoqueMapa.size() == 0) {
             throw new NullPointerException("Parece que o estoque está vazio...");
         }
-
+        Map<String, ArrayList<Item>> novoMapa = new TreeMap<>();
+        
         for(String itemNoEstoque : this.estoqueMapa.keySet()) {
             novoMapa.put(
                 itemNoEstoque, 
-                this.estoqueMapa.get(itemNoEstoque).size()
+                this.estoqueMapa.get(itemNoEstoque)
             );
         }
 
         return novoMapa;
     }
 
-    public Map<String, Integer> retornarEstoquePorQuantidade() throws NullPointerException {
+    public Map<String, ArrayList<Item>> retornarEstoquePorQuantidade() throws NullPointerException {
         // mostra os itens disponíveis no estoque por quantidade
 
         if(this.estoqueMapa.size() == 0) {
@@ -179,19 +179,31 @@ public class Estoque {
                 (e1, e2) -> e1, LinkedHashMap::new
             ));
 
-        return mapaOrdenado;
+        // outro for loop para colocar todos os itens ordenados
+        // em um mapa <String, ArrayList<Item>> para o código poder funcionar bem
+        // pois fica mais complicado usar só Integer
+        Map<String, ArrayList<Item>> novoMapaOrdenado = new LinkedHashMap<>();
+        
+        for(String itemOrdenado : mapaOrdenado.keySet()) {
+            novoMapaOrdenado.put(
+                itemOrdenado,
+                this.estoqueMapa.get(itemOrdenado)
+            );
+        }
+
+        return novoMapaOrdenado;
     }
     
-    public Map<String, Integer> retornarEstoqueEmBaixaQuantidade() throws NullPointerException {
-        Map<String, Integer> mapaOrdenado = this.retornarEstoquePorQuantidade();
-        Map<String, Integer> novoMapa = new LinkedHashMap<>();
-
+    public Map<String, ArrayList<Item>> retornarEstoqueEmBaixaQuantidade() throws NullPointerException {
+        
         if(this.estoqueMapa.size() == 0) {
             throw new NullPointerException("Parece que o estoque está vazio...");
         }
+        Map<String, ArrayList<Item>> mapaOrdenado = this.retornarEstoquePorQuantidade();
+        Map<String, ArrayList<Item>> novoMapa = new LinkedHashMap<>();
 
         for(String itemBQ : mapaOrdenado.keySet()) {
-            if(mapaOrdenado.get(itemBQ) <= 50) {
+            if(mapaOrdenado.get(itemBQ).size() <= 50) {
                 novoMapa.put(itemBQ, mapaOrdenado.get(itemBQ));
             }
         }

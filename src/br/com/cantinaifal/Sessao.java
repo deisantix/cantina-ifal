@@ -74,7 +74,7 @@ public class Sessao {
         switch(opcao) {
             case 1: // Ver produtos ordenados por nome
                 try {
-                    Map<String, Integer> estoqueMapa = this.estoque.retornarEstoquePorNome();
+                    Map<String, ArrayList<Item>> estoqueMapa = this.estoque.retornarEstoquePorNome();
                     this.mostrarItensNoEstoque(estoqueMapa);
 
                 } catch(NullPointerException e) {
@@ -84,7 +84,7 @@ public class Sessao {
 
             case 2: // Ver produtos ordenados por quantidade
                 try {
-                    Map<String, Integer> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
+                    Map<String, ArrayList<Item>> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
                     this.mostrarItensNoEstoque(ordenadoPorQuant);
 
                 } catch(NullPointerException e) {
@@ -93,7 +93,7 @@ public class Sessao {
                 break;
 
             case 3: // Comprar um produto
-                Map<String, Integer> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
+                Map<String, ArrayList<Item>> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
                 this.mostrarItensNoEstoque(ordenadoPorQuant);
 
                 Map<String, ArrayList<Item>> itensNoEstoque = this.estoque.getEstoqueMapa();
@@ -276,7 +276,7 @@ public class Sessao {
 
             case 3: // Ver produtos ordenados por nome
                 try {
-                    Map<String, Integer> estoqueMapa = this.estoque.retornarEstoquePorNome();
+                    Map<String, ArrayList<Item>> estoqueMapa = this.estoque.retornarEstoquePorNome();
                     this.mostrarItensNoEstoque(estoqueMapa);
 
                 } catch(NullPointerException e) {
@@ -286,7 +286,7 @@ public class Sessao {
 
             case 4: // Ver produtos ordenados por quantidade
                 try {
-                    Map<String, Integer> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
+                    Map<String, ArrayList<Item>> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
                     this.mostrarItensNoEstoque(ordenadoPorQuant);
 
                 } catch(NullPointerException e) {
@@ -296,7 +296,7 @@ public class Sessao {
 
             case 5: // Visualizar produtos em baixa quantidade
                 try {
-                    Map<String, Integer> ordenadoPorBaixaQuant = this.estoque.retornarEstoqueEmBaixaQuantidade();
+                    Map<String, ArrayList<Item>> ordenadoPorBaixaQuant = this.estoque.retornarEstoqueEmBaixaQuantidade();
                     this.mostrarItensNoEstoque(ordenadoPorBaixaQuant);
 
                 } catch(NullPointerException e) {
@@ -353,12 +353,16 @@ public class Sessao {
         }
     }
 
-    private void mostrarItensNoEstoque(Map<String, Integer> mapaOrdenado) {
+    private void mostrarItensNoEstoque(Map<String, ArrayList<Item>> mapaOrdenado) {
         for(String item : mapaOrdenado.keySet()) {
-            System.out.println(
-                item + ": " +
-                mapaOrdenado.get(item)
+            String textoFormatado = String.format(
+                "%1$-20s: R$%2$.2f (Q: %3$d)",
+                item, 
+                mapaOrdenado.get(item).get(0).getPrecoVenda(),
+                mapaOrdenado.get(item).size()
             );
+
+            System.out.println(textoFormatado);
         }
     }
 
