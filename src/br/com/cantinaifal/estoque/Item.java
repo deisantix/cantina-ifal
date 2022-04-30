@@ -2,12 +2,18 @@ package br.com.cantinaifal.estoque;
 
 public class Item {
 
+    /**
+     * CLASSE Item PARA A CRIAÇÃO DE ITENS NO ESTOQUE
+     */
+
     private String nome;
     private String descricao;
     private double precoCompra;
     private double precoVenda;
 
     public  Item(String nome, String descricao, double precoCompra, double precoVenda) {
+        // construtor da classe item que verifica os valores colocados na hora de instanciação
+        
         if(nome == "") {
             throw new IllegalArgumentException("Nome inválido");
         } else if (precoCompra <= 0 || precoVenda <= 0) {
@@ -16,11 +22,13 @@ public class Item {
             throw new IllegalArgumentException("Preço de venda menor que preço de compra");
         }
 
-        this.nome = nome;
+        this.nome = nome.toUpperCase();
         this.descricao = descricao;
         this.precoCompra = precoCompra;
         this.precoVenda = precoVenda;
     }
+
+    // getters
 
     public String getNome() {
         return this.nome;

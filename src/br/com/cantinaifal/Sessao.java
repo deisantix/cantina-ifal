@@ -5,21 +5,30 @@ import java.util.*;
 
 public class Sessao {
 
+    /**
+     * CLASSE Sessao QUE DISPONIBILIZA UMA INTERFACE PARA A MANIPULAÇÃO DO ESTOQUE
+     */
+
     private Estoque estoque;
     private Scanner inputUsuario;
     private boolean naSessao = false;
     
     public Sessao() {
+        // construtor
+
         this.estoque = new Estoque();
         this.inputUsuario = new Scanner(System.in);
     }
 
     public void iniciarSessao() {
+        // LOOP RESPONSÁVEL POR MANTER O PROGRAMA ATIVO
         this.naSessao = true;
 
         while(naSessao) {
             this.dormirAlgumTempo();
-            if(this.estoque.getAcessoAdmin()) { // se o administrador estiver com acesso
+
+            // se o administrador estiver com acesso
+            if(this.estoque.getAcessoAdmin()) { 
                 try {
                     this.entrarAdmin();
 
@@ -30,8 +39,9 @@ public class Sessao {
                     System.out.println("Opção inválida");
                     this.inputUsuario.next();
                 }
-
-            } else { // caso o administrador não esteja com acesso
+                
+            // caso o administrador não esteja com acesso
+            } else {
                 try {
                     this.entrarCliente();
 
@@ -44,6 +54,8 @@ public class Sessao {
                 }
             }
         }
+
+        // fechar o Scanner quando o programa for encerrado
         this.inputUsuario.close();
     }
 
@@ -93,37 +105,7 @@ public class Sessao {
                 break;
 
             case 3: // Comprar um produto
-                Map<String, ArrayList<Item>> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
-                this.mostrarItensNoEstoque(ordenadoPorQuant);
-
-                Map<String, ArrayList<Item>> itensNoEstoque = this.estoque.getEstoqueMapa();
-
-                System.out.print("\nDigite um item do catálogo (N para cancelar): ");
-                String itemEscolhido = this.inputUsuario.nextLine();
-
-                if(itemEscolhido.equals("N")) {
-                    return;
-                }
-
-                this.dormirAlgumTempo();
-                if(itensNoEstoque.get(itemEscolhido) == null) {
-                    throw new IllegalArgumentException("\nItem não encontrado no estoque!");
-                } 
-                System.out.print("Quantos você deseja comprar: ");
-                int quantidadeEscolhida = this.inputUsuario.nextInt();
-
-                this.dormirAlgumTempo();
-                if(
-                    quantidadeEscolhida > itensNoEstoque.get(itemEscolhido).size() ||
-                    quantidadeEscolhida <= 0
-                ) {
-                    throw new IllegalArgumentException("\nQuantidade inválida!");
-                }
-
-                this.estoque.comprarItemNoEstoque(itemEscolhido, quantidadeEscolhida);
-
-                this.dormirAlgumTempo();
-                System.out.println("\nItem(ns) vendidos!");
+                this.comprarProduto();
                 break;
 
             case 4: // Entrar como Administrador
@@ -193,85 +175,11 @@ public class Sessao {
 
         switch(opcao) {
             case 1: // Adicionar itens ao estoque
-                try {
-                    System.out.print("Nome: ");
-                    String nomeProduto = this.inputUsuario.nextLine();
-
-                    System.out.print("Descrição: ");
-                    String descricaoProduto = this.inputUsuario.nextLine();
-
-                    System.out.print("Por quanto foi comprado: ");
-                    double precoCompraProduto = this.inputUsuario.nextDouble();
-
-                    System.out.print("Por quanto será revendido: ");
-                    double precoVendaProduto = this.inputUsuario.nextDouble();
-
-                    System.out.print("Quantidade à adicionar: ");
-                    int quantidadeProduto = this.inputUsuario.nextInt();
-
-                    if(quantidadeProduto == 1) {
-                        this.estoque.adicionarItem(
-                            nomeProduto, 
-                            descricaoProduto,
-                            precoCompraProduto, 
-                            precoVendaProduto
-                        );
-                    } else {
-                        this.estoque.adicionarItem(
-                            nomeProduto, 
-                            descricaoProduto,
-                            precoCompraProduto, 
-                            precoVendaProduto,
-                            quantidadeProduto
-                        );
-                    }
-                    System.out.println("\nItem(ns) adicionado(s) com sucesso!\n");
-                    
-                } catch (IllegalArgumentException e) {
-                    this.dormirAlgumTempo();
-                    System.out.println("\nNão foi possível adicionar o(s) item(ns) no estoque");
-
-                    if(e.getMessage() != "") {
-                        System.out.println(e.getMessage());
-                    }
-                } catch(InputMismatchException e) {
-                    this.dormirAlgumTempo();
-                    System.out.println("\nNão foi possível adicionar o(s) item(ns) no estoque");
-
-                    this.inputUsuario.next();
-                }
-
+                this.adicionarItemAoEstoque();
                 break;
 
             case 2: // Dar baixa nos itens vendidos
-                if(this.estoque.getItensVendidos().size() == 0) {
-                    System.out.println("Não há itens a serem baixados...");
-                    return;
-                }
-                
-                System.out.println("Itens vendidos no total:\n");
-
-                for(String itemVendido : this.estoque.getItensVendidos().keySet()) {
-                    System.out.println(
-                        itemVendido + ": " + 
-                        this.estoque.getItensVendidos().get(itemVendido).size() + " x " + 
-                        this.estoque.getItensVendidos().get(itemVendido).get(0).getPrecoVenda()
-                    );
-                }
-                System.out.print("\nDeseja dar baixa? (S/N): ");
-                String decisao = this.inputUsuario.nextLine();
-                this.dormirAlgumTempo();
-
-                if(decisao.equals("S")) {
-                    this.estoque.baixarItens();
-                    System.out.println("Item(ns) baixados com sucesso!");
-                    
-                } else if(decisao.equals("N")) {
-                    return;
-                } else {
-                    throw new IllegalArgumentException("Não é uma opção!");
-                }
-
+                this.darBaixaEmItens();
                 break;
 
             case 3: // Ver produtos ordenados por nome
@@ -305,23 +213,7 @@ public class Sessao {
                 break;
 
             case 6: // Visualizar resumo de lucro
-                try {
-                    double totalLucro = 0;
-
-                    Map<String, ArrayList<Item>> resumoLucro = this.estoque.retornarResumoLucro();
-                    for(String item : resumoLucro.keySet()) {
-                        totalLucro += resumoLucro.get(item).get(0).getPrecoVenda() * resumoLucro.get(item).size();
-
-                        System.out.println(
-                            item + ": " +
-                            resumoLucro.get(item).size()
-                        );
-                    }
-                    System.out.println("Total vendido: R$" + totalLucro);
-
-                } catch(NullPointerException e) {
-                    System.out.println(e.getMessage());
-                }
+                this.visualizarResumoLucro();
                 break;
 
             case 7: // Deslogar
@@ -346,6 +238,8 @@ public class Sessao {
     }
 
     private void dormirAlgumTempo() {
+        // MÉTODO PARA FAZER O TERMINAL DESCANSAR POR ALGUM TEMPO
+
         try {
             Thread.sleep(500);
         } catch (InterruptedException e) {
@@ -354,15 +248,164 @@ public class Sessao {
     }
 
     private void mostrarItensNoEstoque(Map<String, ArrayList<Item>> mapaOrdenado) {
+        // MÉTODO QUE RECEBE UM Map<String, ArrayList<Item>> E
+        // IMPRIME SEUS VALORES FORMATADOS
+
         for(String item : mapaOrdenado.keySet()) {
             String textoFormatado = String.format(
-                "%1$-20s: R$%2$.2f (Q: %3$d)",
+                "%1$s: R$%2$.2f (Q: %3$d)\n%4$s\n",
                 item, 
                 mapaOrdenado.get(item).get(0).getPrecoVenda(),
-                mapaOrdenado.get(item).size()
+                mapaOrdenado.get(item).size(),
+                mapaOrdenado.get(item).get(0).getDescricao()
             );
 
             System.out.println(textoFormatado);
+        }
+    }
+
+    private void comprarProduto() {
+        // MÉTODO QUE PERMITE A COMPRA DE UM PRODUTO
+
+        Map<String, ArrayList<Item>> ordenadoPorQuant = this.estoque.retornarEstoquePorQuantidade();
+        this.mostrarItensNoEstoque(ordenadoPorQuant);
+
+        // esse mapa serve pra acessar diretamente a referência do mapa do estoque,
+        // já que o objeto contido em ordenadoPorQuant é uma cópia
+        Map<String, ArrayList<Item>> itensNoEstoque = this.estoque.getEstoqueMapa();
+
+        System.out.print("\nDigite um item do catálogo (N para cancelar): ");
+        String itemEscolhido = this.inputUsuario.nextLine().toUpperCase();
+
+        if(itemEscolhido.equals("N")) {
+            return;
+        }
+
+        this.dormirAlgumTempo();
+        if(itensNoEstoque.get(itemEscolhido) == null) {
+            throw new IllegalArgumentException("\nItem não encontrado no estoque!");
+        } 
+        System.out.print("Quantos você deseja comprar: ");
+        int quantidadeEscolhida = this.inputUsuario.nextInt();
+
+        this.dormirAlgumTempo();
+        if(
+            quantidadeEscolhida > itensNoEstoque.get(itemEscolhido).size() ||
+            quantidadeEscolhida <= 0
+        ) {
+            throw new IllegalArgumentException("\nQuantidade inválida!");
+        }
+
+        this.estoque.comprarItemNoEstoque(itemEscolhido, quantidadeEscolhida);
+
+        this.dormirAlgumTempo();
+        System.out.println("\nItem(ns) vendidos!");
+    }
+
+    private void adicionarItemAoEstoque() {
+        // PERMITE ADICIONAR UM NOVO ITEM OU JÁ EXISTENTE NO MAPA 
+
+        try {
+            System.out.print("Nome: ");
+            String nomeProduto = this.inputUsuario.nextLine().toUpperCase();
+
+            if(this.estoque.getEstoqueMapa().get(nomeProduto) == null) {
+
+                System.out.print("Descrição: ");
+                String descricaoProduto = this.inputUsuario.nextLine();
+
+                System.out.print("Por quanto foi comprado: ");
+                double precoCompraProduto = this.inputUsuario.nextDouble();
+
+                System.out.print("Por quanto será revendido: ");
+                double precoVendaProduto = this.inputUsuario.nextDouble();
+
+                System.out.print("Quantidade à adicionar: ");
+                int quantidadeProduto = this.inputUsuario.nextInt();
+
+                if(quantidadeProduto == 1) {
+                    this.estoque.adicionarItem(
+                        nomeProduto, 
+                        descricaoProduto,
+                        precoCompraProduto, 
+                        precoVendaProduto
+                    );
+                } else {
+                    this.estoque.adicionarItem(
+                        nomeProduto, 
+                        descricaoProduto,
+                        precoCompraProduto, 
+                        precoVendaProduto,
+                        quantidadeProduto
+                    );
+                }
+
+            } else {
+                System.out.print("Quantidade à adicionar: ");
+                int quantidadeProduto = this.inputUsuario.nextInt();
+
+                this.estoque.adicionarItem(nomeProduto, quantidadeProduto);
+            }
+
+            System.out.println("\nItem(ns) adicionado(s) com sucesso!\n");
+            
+        } catch (IllegalArgumentException e) {
+            this.dormirAlgumTempo();
+            System.out.println("\nNão foi possível adicionar o(s) item(ns) no estoque");
+
+            if(e.getMessage() != "") {
+                System.out.println(e.getMessage());
+            }
+        } catch(InputMismatchException e) {
+            this.dormirAlgumTempo();
+            System.out.println("\nNão foi possível adicionar o(s) item(ns) no estoque");
+
+            this.inputUsuario.next();
+        }
+    }
+
+    private void darBaixaEmItens() {
+        // IMPRIME OS ITENS BAIXADOS E PERGUNTA SE A BAIXA DOS ITENS É DESEJADA
+        // CASO SIM, O MÉTODO baixarItens DE Estoque É CHAMADO
+
+        if(this.estoque.getItensVendidos().size() == 0) {
+            System.out.println("Não há itens a serem baixados...");
+            return;
+        }
+        
+        System.out.println("Itens vendidos no total:\n");
+
+        for(String itemVendido : this.estoque.getItensVendidos().keySet()) {
+            System.out.println(
+                itemVendido + ": " + 
+                this.estoque.getItensVendidos().get(itemVendido).size() + " x " + 
+                this.estoque.getItensVendidos().get(itemVendido).get(0).getPrecoVenda()
+            );
+        }
+        System.out.print("\nDeseja dar baixa? (S/N): ");
+        String decisao = this.inputUsuario.nextLine().toUpperCase();
+        this.dormirAlgumTempo();
+
+        if(decisao.equals("S")) {
+            this.estoque.baixarItens();
+            System.out.println("Item(ns) baixados com sucesso!");
+            
+        } else if(decisao.equals("N")) {
+            return;
+        } else {
+            throw new IllegalArgumentException("Não é uma opção!");
+        }
+    }
+
+    private void visualizarResumoLucro() {
+        // CHAMA O MÉTODO retornarLucroResumo DE Estoque E IMPRIME O LUCRO
+
+        try {
+            double totalLucro = this.estoque.retornarLucroResumo();
+            System.out.println("Total vendido: R$" + totalLucro);
+
+        } catch(NullPointerException e) {
+            System.out.println(e.getMessage());
         }
     }
 
