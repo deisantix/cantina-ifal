@@ -1,21 +1,22 @@
+/**
+ * CLASSE Estoque QUE CONTROLA A TODOS OS ITENS CRIADOS
+ * COM MAPAS E LISTAS, ALÉM DE PROPRIEDADES DE ADMNISTRADOR
+ * CONTÉM COMPORTAMENTOS RESPONSÁVEIS PARA MANIPULAR OS ITENS
+ */
+
 package br.com.cantinaifal.estoque;
 
+
+import java.sql.*;
 import java.util.*;
-import java.util.stream.*;
+import br.com.cantinaifal.database.connection.CantinaIfalConnector;
+import br.com.cantinaifal.estoque.sql.*;
 
 
 public class Estoque {
 
-    /**
-     * CLASSE Estoque QUE CONTROLA A TODOS OS ITENS CRIADOS
-     * COM MAPAS E LISTAS, ALÉM DE PROPRIEDADES DE ADMNISTRADOR
-     * CONTÉM COMPORTAMENTOS RESPONSÁVEIS PARA MANIPULAR OS ITENS
-     */
-
-    // coleção que armazena todos os itens do estoque
-    private Map<String, ArrayList<Item>> estoqueMapa;
-    private Map<String, ArrayList<Item>> itensVendidos;
-    private Map<String, ArrayList<Item>> itensBaixados;
+    private Connection connection;
+    private EstoqueConsulta consulta;
     // atributo que armazena a senha
     private String senhaAdmin;
     // esse atributo é usado para saber se há um administrador (tem a senha definida)
@@ -24,35 +25,30 @@ public class Estoque {
     private boolean acessoAdmin = false;
 
 
-    public Estoque() {
+    public Estoque() throws SQLException {
         // construtor de Estoque
         
-        this.estoqueMapa = new HashMap<String, ArrayList<Item>>();
-        this.itensVendidos = new HashMap<String, ArrayList<Item>>();
-        this.itensBaixados = new HashMap<String, ArrayList<Item>>();
-
-        // inicializando itens no estoque para que fique mais fácil de testar o programa
-        this.adicionarItem("Agua", "Uma garrafinha de água", 2.50, 3.50, 10);
-        this.adicionarItem("Coxinha", "Coxinha de frango", 3, 5, 3);
-        this.adicionarItem("Amendoim", "500g de amendoim", 10, 12.50, 50);
-        this.adicionarItem("Sanduiche", "Um sanduba para matar sua fome", 5, 6.70, 5);
-        this.adicionarItem("Bolo de chocolate", "Uma fatia apenas", 3.50, 4.50, 12);
-
+        this.connection = CantinaIfalConnector.connect();
+        this.consulta = new EstoqueConsulta(this.connection);
+        
+        this.consulta.insertProduto(
+            new Item(4564, "Agua", 2.50, 3.50, 10, 1)
+        );
+        this.consulta.insertProduto(
+            new Item(5564, "Coxinha", 3.00, 5.00, 60, 1)
+        );
+        this.consulta.insertProduto(
+            new Item(7975, "Amendoim", 10.00, 12.50, 100, 1)
+        );
+        this.consulta.insertProduto(
+            new Item(4212, "Sanduiche", 5.00, 6.00, 5, 1)
+        );
+        this.consulta.insertProduto(
+            new Item(1225, "Bolo de chocolate", 3.50, 4.50, 12, 1)
+        );
     }
 
     // getters
-
-    public Map<String, ArrayList<Item>> getEstoqueMapa() {
-        return this.estoqueMapa;
-    }
-
-    public Map<String, ArrayList<Item>> getItensVendidos() {
-        return this.itensVendidos;
-    }
-
-    public Map<String, ArrayList<Item>> getItensBaixados() {
-        return this.itensBaixados;
-    }
 
     public boolean getTemAdmin() {
         return this.temAdmin;
@@ -123,218 +119,169 @@ public class Estoque {
     // métodos para manipular itens
 
     public void adicionarItem(
-        String nome, 
+        int codigo, 
         String descricao, 
         double precoCompra, 
         double precoVenda
     ) throws IllegalArgumentException {
-        // método adicionarItem que adiciona o item na coleção
-
-        Item item = new Item(nome, descricao, precoCompra, precoVenda);
-        // se o item for criado com sucesso
-        // não precisa de if, pois o método é interrompido no momento do erro (caso tenha)
-        String nomeItem = item.getNome();
-
-        // se o item criado já não estiver no mapa, então crie uma chave para ele
-        // com uma ArrayList vazia dentro (onde serão armazenados os itens)
-        if(this.estoqueMapa.get(nomeItem) == null) {
-            ArrayList<Item> listaItem = new ArrayList<>();
-            this.estoqueMapa.put(nomeItem, listaItem);
-        }
-        // de qualquer forma, adicione os itens em suas respectivas listas
-        this.estoqueMapa.get(nomeItem).add(item);
+        Item item = new Item(codigo, descricao, precoCompra, precoVenda, 1, 1);
+        this.consulta.insertProduto(item);
     }
     
     public void adicionarItem(
-        String nome, 
+        int codigo, 
         String descricao, 
         double precoCompra, 
         double precoVenda,
         int quantidade
-    ) {
-        // método adicionarItem que utiliza da técnica overloading
-        // para poder adicionar dinamicamente uma certa quantidade de itens na lista
+    ) throws IllegalArgumentException {
+        Item item = new Item(codigo, descricao, precoCompra, precoVenda, quantidade, 1);
+        this.consulta.insertProduto(item);
+    }
 
-        for(int i = 0; i < quantidade; i++) {
-            this.adicionarItem(nome, descricao, precoCompra, precoVenda);
-        }
+    public void adicionarItem(
+        int codigo, 
+        String descricao, 
+        double precoCompra, 
+        double precoVenda,
+        int quantidade,
+        int estoqueMinimo
+    ) throws IllegalArgumentException {
+        Item item = new Item(codigo, descricao, precoCompra, precoVenda, quantidade, estoqueMinimo);
+        this.consulta.insertProduto(item);
     }
 
     public void adicionarItem(String nome, int quantidade) {
-        // outro método adicionarItem usando overloading
-        // para permitir criar um item já existente sem que precise
-        // repetir todas suas informações
-        // OBS.: até porque não faz sentido criar um mesmo item com propriedades diferentes (não nesse caso)
 
-        this.adicionarItem(
-            nome, 
-            this.estoqueMapa.get(nome).get(0).getDescricao(), 
-            this.estoqueMapa.get(nome).get(0).getPrecoCompra(), 
-            this.estoqueMapa.get(nome).get(0).getPrecoVenda(),
-            quantidade
-        );
     }
 
-    public Map<String, ArrayList<Item>> retornarEstoquePorNome() throws NullPointerException {
+    public ResultSet retornarEstoquePorNome() {
         // mostra os itens disponíveis no estoque por nome
-        
-        // caso o estoque esteja vazio
-        if(this.estoqueMapa.size() == 0) {
-            throw new NullPointerException("Parece que o estoque está vazio...");
-        }
-        // criando um novo mapa que será ordenado por nome
-        // será usado TreeMap, que já ordena suas chaves automaticamente
-        // pelo alfabeto e por números
-        Map<String, ArrayList<Item>> novoMapa = new TreeMap<>();
-        
-        // preenchendo novoMapa
-        for(String itemNoEstoque : this.estoqueMapa.keySet()) {
-            novoMapa.put(
-                itemNoEstoque, 
-                this.estoqueMapa.get(itemNoEstoque)
-            );
-        }
 
-        return novoMapa;
+        String sql = "SELECT codigo_produto, descricao, preco_venda, quantidade_comprada " +
+                     "FROM cantinaifal.produto " +
+                     "WHERE quantidade_comprada > 0 " +
+                     "ORDER BY descricao";
+        ResultSet result = this.consulta.selectQuery(sql);
+
+        return result;
     }
 
-    public Map<String, ArrayList<Item>> retornarEstoquePorQuantidade() throws NullPointerException {
+    public ResultSet retornarEstoquePorQuantidade() {
         // mostra os itens disponíveis no estoque por quantidade
 
-        // caso o estoque esteja vazio
-        if(this.estoqueMapa.size() == 0) {
-            throw new NullPointerException("Parece que o estoque está vazio...");
-        }
-        // criando um novo mapa que será ordenado por quantidade
-        // esse mapa é temporário
-        // tem como valores o tipo Integer, para que possa ser ordenado mais tarde pelos valores
-        Map<String, Integer> mapaQuantidade = new HashMap<>();
-        
-        // populando mapaQuantidade
-        // ao invés de colocar a lista inteira como valores
-        // é colocada seu tamanho (que é equivalente à quantidade dos itens)
-        for(String item : this.estoqueMapa.keySet()) {
-            mapaQuantidade.put(
-                item,
-                this.estoqueMapa.get(item).size()
-            );
-        }
+        String sql = "SELECT codigo_produto, descricao, preco_venda, quantidade_comprada " +
+                     "FROM cantinaifal.produto " +
+                     "WHERE quantidade_comprada > 0 " +
+                     "ORDER BY quantidade_comprada DESC";
+        ResultSet result = this.consulta.selectQuery(sql);
 
-        // Nota de Desenvolvedor: Ytalo, 23-04-2022
-        // código baseado nas respostas dessa questão do StackOverflow:
-        // https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values
-        // não sei o que é um stream, nem o que os operadores :: e -> fazem
-        // mas pelo menos funciona
+        return result;
 
-        Map<String, Integer> mapaOrdenado = mapaQuantidade
-            .entrySet()
-            .stream()
-            .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                Map.Entry::getValue,
-                (e1, e2) -> e1, LinkedHashMap::new
-            ));
-
-        // outro for loop para colocar todos os itens ordenados
-        // em um mapa <String, ArrayList<Item>> para que o código possa funcionar bem
-        // pois fica mais complicado usar só Integer
-        // é usado LinkedHashMap para que a ordem de itens adicionados seja mantida
-        Map<String, ArrayList<Item>> novoMapaOrdenado = new LinkedHashMap<>();
-        
-        // populando novoMapaOrdenado com os itens de mapaOrdenado
-        // porém pegando itens de this.estoqueMapa
-        // pois mapaOrdenado não possui as listas, e sim os tamanhos
-        for(String itemOrdenado : mapaOrdenado.keySet()) {
-            novoMapaOrdenado.put(
-                itemOrdenado,
-                this.estoqueMapa.get(itemOrdenado)
-            );
-        }
-
-        return novoMapaOrdenado;
     }
     
-    public Map<String, ArrayList<Item>> retornarEstoqueEmBaixaQuantidade() throws NullPointerException {
+    public ResultSet retornarEstoqueEmBaixaQuantidade() {
         // método para retornar itens em quantidade abaixo de 50
 
-        // caso o estoque esteja vazio
-        if(this.estoqueMapa.size() == 0) {
-            throw new NullPointerException("Parece que o estoque está vazio...");
-        }
+        String sql = "SELECT codigo_produto, descricao, preco_venda, quantidade_comprada " +
+                     "FROM cantinaifal.produto " +
+                     "WHERE quantidade_comprada > 0 AND quantidade_comprada <= 50 " +
+                     "ORDER BY quantidade_comprada DESC";
+        ResultSet result = this.consulta.selectQuery(sql);
 
-        // retornando mapa ordenado por quantidade
-        Map<String, ArrayList<Item>> mapaOrdenado = this.retornarEstoquePorQuantidade();
-        // instanciando LinkedHashMap para que a ordem de adição seja mantida
-        Map<String, ArrayList<Item>> novoMapa = new LinkedHashMap<>();
-
-        // populando novoMapa apenas se a quantidade dos itens seja menor ou igual a 50
-        for(String itemBQ : mapaOrdenado.keySet()) {
-            if(mapaOrdenado.get(itemBQ).size() <= 50) {
-                novoMapa.put(itemBQ, mapaOrdenado.get(itemBQ));
-            }
-        }
-        return novoMapa;
+        return result;
     }
 
-    public double retornarLucroResumo() throws NullPointerException {
-        // método que passa por todos os itens baixados
-        // os imprime, e calcula a soma de seus valores (lucro)
-        // com base nos preços de venda dos produtos
-
-
-        // caso nenhum item tenha sido baixado
-        if(this.itensBaixados.size() == 0) {
-            throw new NullPointerException("Não foi dado baixa em nenhum item no estoque...");
-        }
+    public List<Integer> retornarListaCodigoProdutos() throws SQLException {
+        ResultSet result = this.retornarEstoquePorNome();
+        List<Integer> listaCodigos = new ArrayList<>();  
         
-        double totalLucro = 0;
-        for(String item : itensBaixados.keySet()) {
-            totalLucro += itensBaixados.get(item).get(0).getPrecoVenda() * itensBaixados.get(item).size();
+        while (result != null && result.next()) {
+            listaCodigos.add(result.getInt(1));
+        }
+        return listaCodigos;
+    }
 
-            System.out.println(
-                item + ": " +
-                itensBaixados.get(item).size()
+    public int retornarQuantidadeProduto(int codigo) throws SQLException {
+        ResultSet result = this.retornarEstoquePorQuantidade();
+
+        int quantidade = 0;
+        while (result != null && result.next()) {
+            if(codigo == result.getInt(1)) {
+                quantidade = result.getInt(4);
+            }
+        }
+        return quantidade;
+    }
+
+    // public double retornarLucroResumo() throws NullPointerException {
+    //     // método que passa por todos os itens baixados
+    //     // os imprime, e calcula a soma de seus valores (lucro)
+    //     // com base nos preços de venda dos produtos
+
+
+    //     // caso nenhum item tenha sido baixado
+    //     if(this.itensBaixados.size() == 0) {
+    //         throw new NullPointerException("Não foi dado baixa em nenhum item no estoque...");
+    //     }
+        
+    //     double totalLucro = 0;
+    //     for(String item : itensBaixados.keySet()) {
+    //         totalLucro += itensBaixados.get(item).get(0).getPrecoVenda() * itensBaixados.get(item).size();
+
+    //         System.out.println(
+    //             item + ": " +
+    //             itensBaixados.get(item).size()
+    //         );
+    //     }
+
+    //     return totalLucro;
+    // }
+
+    public void comprarItemNoEstoque(int codigoItemEscolhido, int quantidadeEscolhida) throws SQLException {
+        // lógica que transfere os itens comprados de um mapa a outro
+        
+        String qrySelect =  "SELECT * FROM cantinaifal.produto " +
+                            "WHERE codigo_produto = " + codigoItemEscolhido;
+        ResultSet result = this.consulta.selectQuery(qrySelect);
+
+        if(result != null && result.next()) {
+            this.consulta.insertItemVendido(
+                new ItemVendido(
+                    this.gerarChaveUnica(5), 
+                    result.getInt(1), 
+                    result.getDouble(4), 
+                    quantidadeEscolhida
+                )
             );
         }
+        int novaQuantidade = result.getInt(5) - quantidadeEscolhida;
+        this.consulta.updateQuantidadeProduto(codigoItemEscolhido, novaQuantidade);
 
-        return totalLucro;
     }
 
-    public void comprarItemNoEstoque(String itemEscolhido, int quantidadeEscolhida) {
-        // lógica que transfere os itens comprados de um mapa a outro
+    // public void baixarItens() {
+    //     // baixa um item
 
-        if(this.itensVendidos.get(itemEscolhido) == null) {
-            this.itensVendidos.put(itemEscolhido, new ArrayList<Item>());
-        }
-        // primeiro for loop para transferir os itens de uma lista para outra
-        for(int i = 0; i < quantidadeEscolhida; i++) {
-            Item itemTransferido = this.estoqueMapa.get(itemEscolhido).get(i);
-            this.itensVendidos.get(itemEscolhido).add(itemTransferido);
-        }
-        // segundo for loop para remover os itens que foram vendidod de estoqueMapa
-        for(int i = 0; i < quantidadeEscolhida; i++) {
-            this.estoqueMapa.get(itemEscolhido).remove(0);
+    //     // primeiro for loop para transferir os itens de uma lista para outra
+    //     for(String item : this.itensVendidos.keySet()) {
+    //         ArrayList<Item> itensTransferidos = this.itensVendidos.get(item);
+    //         this.itensBaixados.put(item, itensTransferidos);
+    //     }
+    //     // segundo for loop para remover os itens de itensVendidos
+    //     // usando itensBaixados para iterar para evitar ConcurrentModificationException
+    //     for(String item : this.itensBaixados.keySet()) {
+    //         this.itensVendidos.remove(item);
+    //     }
+    // }
 
-            if(this.estoqueMapa.get(itemEscolhido).size() == 0) {
-                this.estoqueMapa.remove(itemEscolhido);
-            }
+    private int gerarChaveUnica(int tamanho) {
+        String id = "";
+        Random rand = new Random();
+        for (int i = 0; i < tamanho; i++) {
+            id += rand.nextInt(10);
         }
-    }
-
-    public void baixarItens() {
-        // baixa um item
-
-        // primeiro for loop para transferir os itens de uma lista para outra
-        for(String item : this.itensVendidos.keySet()) {
-            ArrayList<Item> itensTransferidos = this.itensVendidos.get(item);
-            this.itensBaixados.put(item, itensTransferidos);
-        }
-        // segundo for loop para remover os itens de itensVendidos
-        // usando itensBaixados para iterar para evitar ConcurrentModificationException
-        for(String item : this.itensBaixados.keySet()) {
-            this.itensVendidos.remove(item);
-        }
+        return Integer.parseInt(id);
     }
     
 }
