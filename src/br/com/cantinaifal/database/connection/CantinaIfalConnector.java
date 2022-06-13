@@ -28,13 +28,17 @@ public class CantinaIfalConnector {
             con = ConnectionFactory.getConnection("mysql");
 
             try {
-                System.out.println("Espere um momento, o banco está sendo criado...");
+                message.setMessage("<html><center>" + "Espere um momento, o banco está sendo criado..." + "</center></html>");
+                dialog.setVisible(true);
 
                 CantinaIfalDBInstaller.installDB(con);
-                System.out.println("Banco criado com sucesso!");
+
+                message.setMessage("Banco criado com sucesso!");
+                dialog.setVisible(true);
 
             } catch (Exception e2) {
-                System.out.println(e2.getMessage());
+                message.setMessage(e2.getMessage());
+                dialog.setVisible(true);
             }
 
         }

@@ -3,6 +3,9 @@ package br.com.cantinaifal.estoque.sql;
 
 import java.sql.*;
 import java.util.Map;
+
+import com.mysql.cj.log.Log;
+
 import br.com.cantinaifal.estoque.Funcionario;
 import br.com.cantinaifal.estoque.Item;
 import br.com.cantinaifal.estoque.ItemVendido;
@@ -17,12 +20,16 @@ public class EstoqueConsulta {
         this.connection = con;
     }
 
-    public void insertProduto(Item item) {
-        String sql = "INSERT INTO cantinaifal.produto " +
-                     "VALUES (?, ?, ?, ?, ?, ?)"; 
+    public void insertProduto(Item item, Funcionario func) throws Exception {
+        this.connection.setAutoCommit(false);
+        String sqlProduto = "INSERT INTO cantinaifal.produto " +
+                            "VALUES (?, ?, ?, ?, ?, ?)"; 
+        
+        String sqlCadastra = "INSERT INTO cantinaifal.cadastra " +
+                             "VALUES (?, ?)";
 
         try {
-            this.stmt = this.connection.prepareStatement(sql);
+            this.stmt = this.connection.prepareStatement(sqlProduto);
 
             this.stmt.setInt(1, item.getCodigo());
             this.stmt.setString(2, item.getDescricao());
@@ -30,11 +37,19 @@ public class EstoqueConsulta {
             this.stmt.setDouble(4, item.getPrecoVenda());
             this.stmt.setInt(5, item.getQuantidadeComprada());
             this.stmt.setInt(6, item.getEstoqueMinimo());
-
             this.stmt.execute();
+
+            this.stmt = this.connection.prepareStatement(sqlCadastra);
+
+            this.stmt.setInt(1, func.getCodigoLogin());
+            this.stmt.setInt(2, item.getCodigo());
+            this.stmt.execute();
+
+            this.connection.commit();
             
         } catch (Exception e) {
-            System.out.println(e);
+            this.connection.rollback();
+            throw new Exception(e);
         }
     }
 

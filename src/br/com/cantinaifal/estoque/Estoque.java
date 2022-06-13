@@ -18,6 +18,7 @@ public class Estoque {
     private Connection connection;
     private EstoqueConsulta consulta;
     private List<Funcionario> funcionarios;
+    private Funcionario funcionarioLogado;
 
     public Estoque() throws SQLException {
         // construtor de Estoque
@@ -25,22 +26,18 @@ public class Estoque {
         this.connection = CantinaIfalConnector.connect();
         this.consulta = new EstoqueConsulta(this.connection);
         this.funcionarios = new ArrayList<>();
-        
-        this.consulta.insertProduto(
-            new Item(4564, "Agua", 2.50, 3.50, 10, 1)
-        );
-        this.consulta.insertProduto(
-            new Item(5564, "Coxinha", 3.00, 5.00, 60, 1)
-        );
-        this.consulta.insertProduto(
-            new Item(7975, "Amendoim", 10.00, 12.50, 100, 1)
-        );
-        this.consulta.insertProduto(
-            new Item(4212, "Sanduiche", 5.00, 6.00, 5, 1)
-        );
-        this.consulta.insertProduto(
-            new Item(1225, "Bolo de chocolate", 3.50, 4.50, 12, 1)
-        );
+
+        String sql = "SELECT * FROM cantinaifal.funcionario";
+        ResultSet funcs = this.consulta.selectQuery(sql);
+
+        while(funcs != null && funcs.next()) {
+            this.funcionarios.add(new Funcionario(
+                funcs.getInt(1),
+                funcs.getString(2),
+                funcs.getString(3)
+            ));
+        }
+
     }
 
     // métodos para manipular admnistrador
@@ -87,6 +84,14 @@ public class Estoque {
         ResultSet result = this.consulta.selectQuery(sql, atributos); 
 
         if(result != null && result.next()) {
+            for(Funcionario func : funcionarios) {
+                if(func.getLogin().equals(login)) {
+                    funcionarioLogado = func;
+                }
+            }
+            if(funcionarioLogado == null) {
+                throw new IllegalArgumentException("Não foi possível realizar o login");    
+            }
             return;
         } else {
             throw new IllegalArgumentException("Login ou senha inválidos");
@@ -105,11 +110,11 @@ public class Estoque {
         double precoVenda,
         int quantidade,
         int estoqueMinimo
-    ) throws IllegalArgumentException {
+    ) throws Exception {
         int codigo = gerarChaveUnica(4);
         
         Item item = new Item(codigo, descricao, precoCompra, precoVenda, quantidade, estoqueMinimo);
-        this.consulta.insertProduto(item);
+        this.consulta.insertProduto(item, funcionarioLogado);
     }
 
     public ResultSet retornarEstoquePorNome() {
