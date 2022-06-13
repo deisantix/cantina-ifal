@@ -58,7 +58,7 @@ public abstract class MainFrame extends JFrame {
         );
         this.sejaBemVindo.setBounds(
             (this.frameWidth / 2) - (500 / 2),
-            160,
+            170,
             500, 25
         );
         add(this.sejaBemVindo);

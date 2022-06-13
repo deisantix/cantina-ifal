@@ -1,17 +1,21 @@
 package br.com.cantinaifal.gui;
 
 import javax.swing.*;
-import br.com.cantinaifal.Config;
+import javax.swing.table.*;
 import java.awt.Color;
+import java.awt.event.*;
+import java.sql.ResultSet;
+import br.com.cantinaifal.Config;
+import br.com.cantinaifal.estoque.Estoque;
 
 public class FuncionarioFrame extends MainFrame {
-    
-    private JLabel lblAdicionarItens;
-    private JLabel lblBaixarVendidos;
-    private JLabel lblOrdenadoPorNome;
-    private JLabel lblOrdenadoPorQuantidade;
-    private JLabel lblBaixaQuantidade;
-    private JLabel lblLucro;
+
+    private Estoque estoque;
+    private ClienteFrame frameCliente;
+
+    private String[] colunasTabela = {"CODIGO", "DESCRIÇÃO", "PREÇO", "QUANTIDADE"};
+    private DefaultTableModel modeloTabela;
+    private JTable tabelaProdutos;
 
     private JButton btnAdicionarItens;
     private JButton btnBaixarVendidos;
@@ -20,125 +24,194 @@ public class FuncionarioFrame extends MainFrame {
     private JButton btnBaixaQuantidade;
     private JButton btnLucro;
 
-    public FuncionarioFrame(String setor, JLabel imgSetor, JButton mainButton, Color buttonColor) {
+    public FuncionarioFrame(
+        String setor, 
+        JLabel imgSetor, 
+        JButton mainButton, 
+        Color buttonColor, 
+        Estoque estoque
+    ) {
         super(setor, imgSetor, mainButton, buttonColor);
+        this.estoque = estoque;
 
-        int actionLabelWidth = 380;
-        int actionLabelHeight = 25;
-        int xActionLabel = 30;
-        int yActionLabel = 250;
-        int espacamento = 30;
-
-
-        this.lblAdicionarItens = new JLabel("1) Adicionar itens ao estoque");
-        this.lblAdicionarItens.setBounds(
-            xActionLabel, 
-            yActionLabel, 
-            actionLabelWidth, actionLabelHeight
+        // reconfigurando tamanho do painel de tabela
+        this.painelLateral.setBounds(
+            (this.frameWidth / 2) - (this.frameWidth - 20) / 2, 
+            200, 
+            (this.frameWidth - 20), 200
         );
-        add(this.lblAdicionarItens);
 
-        this.btnAdicionarItens = new JButton("...");
+        this.btnAdicionarItens = new JButton("<html><center>" + "ADICIONAR ITENS AO ESTOQUE" + "</center></html>");
         this.btnAdicionarItens.setBounds(
-            actionLabelWidth - xActionLabel, 
-            (yActionLabel + 4), 
-            30, 17
+            80,
+            this.frameHeight - 180, 
+            200, 60
         );
-        this.btnAdicionarItens.setBackground(new java.awt.Color(120, 230, 255));
+        this.btnAdicionarItens.setFocusPainted(false);
+        this.btnAdicionarItens.setBackground(new Color(120, 230, 255));
         add(this.btnAdicionarItens);
 
 
-        int yBaixarVendidos = (yActionLabel + espacamento);
-        this.lblBaixarVendidos = new JLabel("2) Dar baixa nos itens vendidos");
-        this.lblBaixarVendidos.setBounds(
-            xActionLabel, 
-            yBaixarVendidos, 
-            actionLabelWidth, actionLabelHeight
-        );
-        add(this.lblBaixarVendidos);
-
-        this.btnBaixarVendidos = new JButton("...");
+        this.btnBaixarVendidos = new JButton("<html><center>" + "DAR BAIXA NOS ITENS VENDIDOS" + "</center></html>");
         this.btnBaixarVendidos.setBounds(
-            actionLabelWidth - xActionLabel, 
-            (yBaixarVendidos + 4), 
-            30, 17
+            300,
+            this.frameHeight - 180, 
+            200, 60
         );
+        this.btnBaixarVendidos.setFocusPainted(false);
         this.btnBaixarVendidos.setBackground(new Color(120, 230, 255));
         add(this.btnBaixarVendidos);
 
 
-        int yOrdenadoPorNome = (yActionLabel + espacamento * 2);
-        this.lblOrdenadoPorNome = new JLabel("3) Ver produtos ordenados por nome");
-        this.lblOrdenadoPorNome.setBounds(
-            xActionLabel,
-            yOrdenadoPorNome,
-            actionLabelWidth, actionLabelHeight
-        );
-        add(this.lblOrdenadoPorNome);
-
-        this.btnOrdenadoPorNome = new JButton("...");
+        this.btnOrdenadoPorNome = new JButton("<html><center>" + "VER PRODUTOS ORDENADOS POR NOME" + "</center></html>");
         this.btnOrdenadoPorNome.setBounds(
-            actionLabelWidth - xActionLabel,
-            (yOrdenadoPorNome + 4),
-            30, 17
+            520,
+            this.frameHeight - 180, 
+            200, 60
         );
+        this.btnOrdenadoPorNome.setFocusPainted(false);
+        this.btnOrdenadoPorNome.setBackground(new Color(120, 230, 255));
         add(this.btnOrdenadoPorNome);
 
 
-        int yOrdenadoPorQuantidade = (yActionLabel + espacamento * 3);
-        lblOrdenadoPorQuantidade = new JLabel("4) Ver produtos ordenados por nome");
-        this.lblOrdenadoPorQuantidade.setBounds(
-            xActionLabel,
-            yOrdenadoPorQuantidade,
-            actionLabelWidth, actionLabelHeight
-        );
-        add(this.lblOrdenadoPorQuantidade);
-
-        this.btnOrdenadoPorQuantidade = new JButton("...");
+        this.btnOrdenadoPorQuantidade = new JButton("<html><center>" + "VER PRODUTOS ORDENADOS POR QUANTIDADE" + "</center></html>");
         this.btnOrdenadoPorQuantidade.setBounds(
-            actionLabelWidth - xActionLabel,
-            (yOrdenadoPorQuantidade + 4),
-            30, 17
+            80,
+            this.frameHeight - 110, 
+            200, 60
         );
+        this.btnOrdenadoPorQuantidade.setFocusPainted(false);
+        this.btnOrdenadoPorQuantidade.setBackground(new Color(120, 230, 255));
         add(this.btnOrdenadoPorQuantidade);
 
 
-        int yBaixaQuantidade = (yActionLabel + espacamento * 4);
-        this.lblBaixaQuantidade = new JLabel("5) Visualizar produtos em baixa quantidade");
-        this.lblBaixaQuantidade.setBounds(
-            xActionLabel, 
-            yBaixaQuantidade, 
-            actionLabelWidth, actionLabelHeight
-        );
-        add(this.lblBaixaQuantidade);
-
-        this.btnBaixaQuantidade = new JButton("...");
+        this.btnBaixaQuantidade = new JButton("<html><center>" + "VISUALIZAR PRODUTOS EM BAIXA QUANTIDADE" + "</center></html>");
         this.btnBaixaQuantidade.setBounds(
-            actionLabelWidth - xActionLabel, 
-            (yBaixaQuantidade + 4), 
-            30, 17
+            300,
+            this.frameHeight - 110, 
+            200, 60
         );
+        this.btnBaixaQuantidade.setFocusPainted(false);
         this.btnBaixaQuantidade.setBackground(new Color(120, 230, 255));
         add(this.btnBaixaQuantidade);
 
 
-        int yLucro = (yActionLabel + espacamento * 5);
-        this.lblLucro = new JLabel("6) Visualizar resumo de lucro");
-        this.lblLucro.setBounds(
-            xActionLabel, 
-            yLucro, 
-            actionLabelWidth, actionLabelHeight
-        );
-        add(this.lblLucro);
-
-        this.btnLucro = new JButton("...");
+        this.btnLucro = new JButton("<html><center>" + "VISUALIZAR RESUMO DE LUCRO" + "</center></html>");
         this.btnLucro.setBounds(
-            actionLabelWidth - xActionLabel, 
-            (yLucro + 4), 
-            30, 17
+            520,
+            this.frameHeight - 110, 
+            200, 60
         );
+        this.btnLucro.setFocusPainted(false);
         this.btnLucro.setBackground(new Color(120, 230, 255));
         add(this.btnLucro);
+
+        repaint();
+
+        this.btnAdicionarItens.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                TelaAdicionarItem addI = new TelaAdicionarItem(estoque);
+            }
+        });
+
+        this.btnOrdenadoPorNome.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                painelLateral.removeAll();
+
+                modeloTabela = new DefaultTableModel(colunasTabela, 0);
+                tabelaProdutos = new JTable(modeloTabela);
+                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 160);
+                JTableHeader header = tabelaProdutos.getTableHeader();
+                header.setBounds(10, 10, (frameWidth - 40), 20);
+                
+                ResultSet produtos = estoque.retornarEstoquePorNome();
+                try {
+                    while(produtos != null & produtos.next()) {
+                        modeloTabela.addRow(new String[] {
+                            String.valueOf(produtos.getInt(1)),
+                            produtos.getString(2),
+                            String.valueOf(produtos.getDouble(3)),
+                            String.valueOf(produtos.getInt(4))
+                        });
+                    }
+                } catch (Exception ex) {
+                    message.setMessage(ex.getMessage());
+                    dialog = message.createDialog(null, "Alerta");
+                    dialog.setVisible(true);
+                }
+                
+                painelLateral.add(header);
+                painelLateral.add(tabelaProdutos);
+                painelLateral.repaint();
+                painelLateral.revalidate();
+            }
+        });
+
+        this.btnOrdenadoPorQuantidade.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                painelLateral.removeAll();
+
+                modeloTabela = new DefaultTableModel(colunasTabela, 0);
+                tabelaProdutos = new JTable(modeloTabela);
+                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 160);
+                JTableHeader header = tabelaProdutos.getTableHeader();
+                header.setBounds(10, 10, (frameWidth - 40), 20);
+                
+                ResultSet produtos = estoque.retornarEstoquePorQuantidade();
+                try {
+                    while(produtos != null & produtos.next()) {
+                        modeloTabela.addRow(new String[] {
+                            String.valueOf(produtos.getInt(1)),
+                            produtos.getString(2),
+                            String.valueOf(produtos.getDouble(3)),
+                            String.valueOf(produtos.getInt(4))
+                        });
+                    }
+                } catch (Exception ex) {
+                    message.setMessage(ex.getMessage());
+                    dialog = message.createDialog(null, "Alerta");
+                    dialog.setVisible(true);
+                }
+                
+                painelLateral.add(header);
+                painelLateral.add(tabelaProdutos);
+                painelLateral.repaint();
+                painelLateral.revalidate();
+            }
+        });
+
+        this.btnBaixaQuantidade.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                painelLateral.removeAll();
+
+                modeloTabela = new DefaultTableModel(colunasTabela, 0);
+                tabelaProdutos = new JTable(modeloTabela);
+                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 160);
+                JTableHeader header = tabelaProdutos.getTableHeader();
+                header.setBounds(10, 10, (frameWidth - 40), 20);
+                
+                ResultSet produtos = estoque.retornarEstoqueEmBaixaQuantidade();
+                try {
+                    while(produtos != null & produtos.next()) {
+                        modeloTabela.addRow(new String[] {
+                            String.valueOf(produtos.getInt(1)),
+                            produtos.getString(2),
+                            String.valueOf(produtos.getDouble(3)),
+                            String.valueOf(produtos.getInt(4))
+                        });
+                    }
+                } catch (Exception ex) {
+                    message.setMessage(ex.getMessage());
+                    dialog = message.createDialog(null, "Alerta");
+                    dialog.setVisible(true);
+                }
+                
+                painelLateral.add(header);
+                painelLateral.add(tabelaProdutos);
+                painelLateral.repaint();
+                painelLateral.revalidate();
+            }
+        });
     }
 
     public static void main(String[] args) {
@@ -149,7 +222,12 @@ public class FuncionarioFrame extends MainFrame {
 
         JButton mainButton = new JButton("DESCONECTAR");
         Color buttonColor = new Color(0, 90, 190);
-        FuncionarioFrame ffm = new FuncionarioFrame(setor, imgSetor, mainButton, buttonColor);
+
+        try {
+            FuncionarioFrame funcionarioFrame = new FuncionarioFrame(setor, imgSetor, mainButton, buttonColor, new Estoque());
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
 }

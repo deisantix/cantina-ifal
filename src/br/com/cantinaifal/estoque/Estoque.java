@@ -50,7 +50,25 @@ public class Estoque {
             this.gerarChaveUnica(3),
             login, senha
         );
+        if (this.existirFuncionario(novoFunc)) {
+            throw new Exception("Funcionário já existe!");
+        }
         this.adicionarFuncionario(novoFunc);
+    }
+
+    private boolean existirFuncionario(Funcionario func) throws SQLException {
+        String sql = "SELECT nome FROM cantinaifal.funcionario " +
+                     "WHERE nome = ?";
+
+        Map<Integer, Object> atributos = new HashMap<>();
+        atributos.put(1, func.getLogin());
+
+        ResultSet result = this.consulta.selectQuery(sql, atributos);
+        if(result != null && result.next()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void adicionarFuncionario(Funcionario func) throws Exception {
@@ -58,7 +76,7 @@ public class Estoque {
         this.consulta.insertFuncionario(func);
     }
 
-    public void entrarComoFuncionario(String login, String senha) throws SQLException, IllegalArgumentException {
+    public void entrarComoFuncionario(String login, String senha) throws SQLException {
         String sql = "SELECT nome, senha FROM cantinaifal.funcionario " +
                      "WHERE nome = ? AND senha = ?";
 
@@ -79,99 +97,19 @@ public class Estoque {
         return this.funcionarios.size();
     }
 
-    // public void setSenhaAdmin(Scanner inputUsuario) throws IllegalArgumentException {
-    //     // RESPONSÁVEL POR SETAR A SENHA DE ADMINISTRADOR
-
-    //     // caso senha já tenha sido definida (temAdmin = true)
-    //     // precisará passar por verificação para que a senha possa ser redefinida
-    //     if(this.temAdmin) {
-    //         System.out.print("Digite a senha atual para prosseguir: ");
-    //         String senhaAtual = inputUsuario.nextLine();
-
-    //         if(!senhaAtual.equals(this.senhaAdmin)) {
-    //             throw new IllegalArgumentException("As senhas não correspondem!");
-    //         }
-    //     }
-    //     // digitando nova senha
-    //     System.out.print("Digite a nova senha: ");
-    //     String senhaNova = inputUsuario.nextLine();
-
-    //     // caso a senha não tenha 4 dígitos de apenas números, lance uma exceção
-    //     if(!senhaNova.matches("[0-9]{4}")) {
-    //         throw new IllegalArgumentException(
-    //             "Senha inválida!" +
-    //             "\nDigite uma senha de 4 dígitos contendo apenas números."
-    //         );
-    //     }
-    //     // definindo nova senha
-    //     this.senhaAdmin = senhaNova;
-    //     System.out.println("Senha cadastrada com sucesso!\n");
-    //     // setando temAdmin para true, pois a senha foi definida
-    //     this.temAdmin = true;
-    // }
-
-    // public void entrarComoAdmin(Scanner inputUsuario) throws IllegalArgumentException {
-    //     // método para autenticar o acesso de administrador pedindo a senha
-    //     // caso a senha seja autenticada, a propriedade this.acessoAdmin se torna true
-    //     // para mostrar que o admin agora tem acesso
-    //     // caso contrário, exceção será lançada
-
-    //     System.out.print("Digite a senha do administrador: ");
-    //     String senhaInput = inputUsuario.nextLine();
-
-    //     if(senhaInput.equals(this.senhaAdmin)) {
-    //         this.acessoAdmin = true;
-    //         System.out.println("Admnistrador acessado com sucesso!");
-    //     } else {
-    //         throw new IllegalArgumentException("Não foi possível acessar o administrador!");
-    //     }
-    // }
-
-    // public void deslogarComoAdmin() {
-    //     // método para deslogar o administrador
-    //     // é necessário apenas setar this.acessoAdmin para false
-
-    //     this.acessoAdmin = false;
-    //     System.out.println("O admnistrador foi deslogado");
-    // }
-
     // métodos para manipular itens
 
-    public void adicionarItem(
-        int codigo, 
-        String descricao, 
-        double precoCompra, 
-        double precoVenda
-    ) throws IllegalArgumentException {
-        Item item = new Item(codigo, descricao, precoCompra, precoVenda, 1, 1);
-        this.consulta.insertProduto(item);
-    }
-    
-    public void adicionarItem(
-        int codigo, 
-        String descricao, 
-        double precoCompra, 
-        double precoVenda,
-        int quantidade
-    ) throws IllegalArgumentException {
-        Item item = new Item(codigo, descricao, precoCompra, precoVenda, quantidade, 1);
-        this.consulta.insertProduto(item);
-    }
-
-    public void adicionarItem(
-        int codigo, 
+    public void adicionarItem( 
         String descricao, 
         double precoCompra, 
         double precoVenda,
         int quantidade,
         int estoqueMinimo
     ) throws IllegalArgumentException {
+        int codigo = gerarChaveUnica(4);
+        
         Item item = new Item(codigo, descricao, precoCompra, precoVenda, quantidade, estoqueMinimo);
         this.consulta.insertProduto(item);
-    }
-
-    public void adicionarItem(String nome, int quantidade) {
-
     }
 
     public ResultSet retornarEstoquePorNome() {
