@@ -2,6 +2,8 @@ package br.com.cantinaifal.estoque.sql;
 
 
 import java.sql.*;
+import java.util.Map;
+import br.com.cantinaifal.estoque.Funcionario;
 import br.com.cantinaifal.estoque.Item;
 import br.com.cantinaifal.estoque.ItemVendido;
 
@@ -54,6 +56,19 @@ public class EstoqueConsulta {
         }
     }
 
+    public void insertFuncionario(Funcionario func) throws Exception {
+        String sql = "INSERT INTO cantinaifal.funcionario " +
+                     "VALUES (?, ?, ?)";
+    
+        this.stmt = this.connection.prepareStatement(sql);
+        
+        this.stmt.setInt(1, func.getCodigoLogin());
+        this.stmt.setString(2, func.getLogin());
+        this.stmt.setString(3, func.getSenha());
+
+        this.stmt.execute();
+    }
+
     public void updateQuantidadeProduto(int codigoItemEscolhido, int novaQuantidade) {
         String qryUpdate =  "UPDATE cantinaifal.produto " +
                             "SET quantidade_comprada = " + novaQuantidade + " " +
@@ -71,6 +86,32 @@ public class EstoqueConsulta {
         ResultSet result;
         try {
             this.stmt = this.connection.prepareStatement(sql);
+            result = this.stmt.executeQuery();
+            
+        } catch (Exception e) {
+            System.out.println(e);
+            result = null;
+        }
+        return result;
+    }
+
+    public ResultSet selectQuery(String sql, Map<Integer, Object> attr) {
+        ResultSet result;
+        try {
+            this.stmt = this.connection.prepareStatement(sql);
+
+            for(int key : attr.keySet()) {
+                if (attr.get(key) instanceof String) {
+                    this.stmt.setString(key, (String) attr.get(key));
+
+                } else if (attr.get(key) instanceof Integer) {
+                    this.stmt.setInt(key, (Integer) attr.get(key));
+
+                } else if (attr.get(key) instanceof Double) {
+                    this.stmt.setDouble(key, (Double) attr.get(key));
+                }
+            }
+
             result = this.stmt.executeQuery();
             
         } catch (Exception e) {

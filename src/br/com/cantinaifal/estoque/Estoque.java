@@ -17,19 +17,14 @@ public class Estoque {
 
     private Connection connection;
     private EstoqueConsulta consulta;
-    // atributo que armazena a senha
-    private String senhaAdmin;
-    // esse atributo é usado para saber se há um administrador (tem a senha definida)
-    private boolean temAdmin = false; 
-    // esse atributo é para saber se a pessoa usando está com o acesso do admin
-    private boolean acessoAdmin = false;
-
+    private List<Funcionario> funcionarios;
 
     public Estoque() throws SQLException {
         // construtor de Estoque
         
         this.connection = CantinaIfalConnector.connect();
         this.consulta = new EstoqueConsulta(this.connection);
+        this.funcionarios = new ArrayList<>();
         
         this.consulta.insertProduto(
             new Item(4564, "Agua", 2.50, 3.50, 10, 1)
@@ -48,73 +43,97 @@ public class Estoque {
         );
     }
 
-    // getters
-
-    public boolean getTemAdmin() {
-        return this.temAdmin;
-    }
-
-    public boolean getAcessoAdmin() {
-        return this.acessoAdmin;
-    }
-
     // métodos para manipular admnistrador
 
-    public void setSenhaAdmin(Scanner inputUsuario) throws IllegalArgumentException {
-        // RESPONSÁVEL POR SETAR A SENHA DE ADMINISTRADOR
-
-        // caso senha já tenha sido definida (temAdmin = true)
-        // precisará passar por verificação para que a senha possa ser redefinida
-        if(this.temAdmin) {
-            System.out.print("Digite a senha atual para prosseguir: ");
-            String senhaAtual = inputUsuario.nextLine();
-
-            if(!senhaAtual.equals(this.senhaAdmin)) {
-                throw new IllegalArgumentException("As senhas não correspondem!");
-            }
-        }
-        // digitando nova senha
-        System.out.print("Digite a nova senha: ");
-        String senhaNova = inputUsuario.nextLine();
-
-        // caso a senha não tenha 4 dígitos de apenas números, lance uma exceção
-        if(!senhaNova.matches("[0-9]{4}")) {
-            throw new IllegalArgumentException(
-                "Senha inválida!" +
-                "\nDigite uma senha de 4 dígitos contendo apenas números."
-            );
-        }
-        // definindo nova senha
-        this.senhaAdmin = senhaNova;
-        System.out.println("Senha cadastrada com sucesso!\n");
-        // setando temAdmin para true, pois a senha foi definida
-        this.temAdmin = true;
+    public void cadastrarFuncionario(String login, String senha) throws Exception {
+        Funcionario novoFunc = new Funcionario(
+            this.gerarChaveUnica(3),
+            login, senha
+        );
+        this.adicionarFuncionario(novoFunc);
     }
 
-    public void entrarComoAdmin(Scanner inputUsuario) throws IllegalArgumentException {
-        // método para autenticar o acesso de administrador pedindo a senha
-        // caso a senha seja autenticada, a propriedade this.acessoAdmin se torna true
-        // para mostrar que o admin agora tem acesso
-        // caso contrário, exceção será lançada
+    private void adicionarFuncionario(Funcionario func) throws Exception {
+        this.funcionarios.add(func);
+        this.consulta.insertFuncionario(func);
+    }
 
-        System.out.print("Digite a senha do administrador: ");
-        String senhaInput = inputUsuario.nextLine();
+    public void entrarComoFuncionario(String login, String senha) throws SQLException, IllegalArgumentException {
+        String sql = "SELECT nome, senha FROM cantinaifal.funcionario " +
+                     "WHERE nome = ? AND senha = ?";
 
-        if(senhaInput.equals(this.senhaAdmin)) {
-            this.acessoAdmin = true;
-            System.out.println("Admnistrador acessado com sucesso!");
+        Map<Integer, Object> atributos = new HashMap<>();
+        atributos.put(1, login);
+        atributos.put(2, senha);
+
+        ResultSet result = this.consulta.selectQuery(sql, atributos); 
+
+        if(result != null && result.next()) {
+            return;
         } else {
-            throw new IllegalArgumentException("Não foi possível acessar o administrador!");
+            throw new IllegalArgumentException("Login ou senha inválidos");
         }
     }
 
-    public void deslogarComoAdmin() {
-        // método para deslogar o administrador
-        // é necessário apenas setar this.acessoAdmin para false
-
-        this.acessoAdmin = false;
-        System.out.println("O admnistrador foi deslogado");
+    public int getQuantosFuncionarios() {
+        return this.funcionarios.size();
     }
+
+    // public void setSenhaAdmin(Scanner inputUsuario) throws IllegalArgumentException {
+    //     // RESPONSÁVEL POR SETAR A SENHA DE ADMINISTRADOR
+
+    //     // caso senha já tenha sido definida (temAdmin = true)
+    //     // precisará passar por verificação para que a senha possa ser redefinida
+    //     if(this.temAdmin) {
+    //         System.out.print("Digite a senha atual para prosseguir: ");
+    //         String senhaAtual = inputUsuario.nextLine();
+
+    //         if(!senhaAtual.equals(this.senhaAdmin)) {
+    //             throw new IllegalArgumentException("As senhas não correspondem!");
+    //         }
+    //     }
+    //     // digitando nova senha
+    //     System.out.print("Digite a nova senha: ");
+    //     String senhaNova = inputUsuario.nextLine();
+
+    //     // caso a senha não tenha 4 dígitos de apenas números, lance uma exceção
+    //     if(!senhaNova.matches("[0-9]{4}")) {
+    //         throw new IllegalArgumentException(
+    //             "Senha inválida!" +
+    //             "\nDigite uma senha de 4 dígitos contendo apenas números."
+    //         );
+    //     }
+    //     // definindo nova senha
+    //     this.senhaAdmin = senhaNova;
+    //     System.out.println("Senha cadastrada com sucesso!\n");
+    //     // setando temAdmin para true, pois a senha foi definida
+    //     this.temAdmin = true;
+    // }
+
+    // public void entrarComoAdmin(Scanner inputUsuario) throws IllegalArgumentException {
+    //     // método para autenticar o acesso de administrador pedindo a senha
+    //     // caso a senha seja autenticada, a propriedade this.acessoAdmin se torna true
+    //     // para mostrar que o admin agora tem acesso
+    //     // caso contrário, exceção será lançada
+
+    //     System.out.print("Digite a senha do administrador: ");
+    //     String senhaInput = inputUsuario.nextLine();
+
+    //     if(senhaInput.equals(this.senhaAdmin)) {
+    //         this.acessoAdmin = true;
+    //         System.out.println("Admnistrador acessado com sucesso!");
+    //     } else {
+    //         throw new IllegalArgumentException("Não foi possível acessar o administrador!");
+    //     }
+    // }
+
+    // public void deslogarComoAdmin() {
+    //     // método para deslogar o administrador
+    //     // é necessário apenas setar this.acessoAdmin para false
+
+    //     this.acessoAdmin = false;
+    //     System.out.println("O admnistrador foi deslogado");
+    // }
 
     // métodos para manipular itens
 

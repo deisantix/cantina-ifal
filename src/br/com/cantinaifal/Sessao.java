@@ -9,18 +9,24 @@ import br.com.cantinaifal.estoque.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import com.mysql.cj.jdbc.exceptions.CommunicationsException;
 
 public class Sessao {
 
     private Estoque estoque;
     private Scanner inputUsuario;
     private boolean naSessao = false;
+    private boolean ehAdmin = false;
     
     public Sessao() {
         // construtor
         try {
             this.estoque = new Estoque();
             
+        } catch (CommunicationsException ce) {
+            System.out.println("Não foi possível conectar com o banco de dados");
+            System.out.println("Assegure que sua conexão Apache esteja aberta");
+
         } catch (Exception e) {
             System.out.println(e);
             System.out.println("Não foi possível iniciar o programa");
@@ -38,7 +44,7 @@ public class Sessao {
                 this.dormirAlgumTempo();
     
                 // se o administrador estiver com acesso
-                if(this.estoque.getAcessoAdmin()) { 
+                if(ehAdmin) { 
                     try {
                         this.entrarAdmin();
     
@@ -69,6 +75,10 @@ public class Sessao {
 
         // fechar o Scanner quando o programa for encerrado
         this.inputUsuario.close();
+    }
+
+    private void setEhAdmin() {
+        this.ehAdmin = !this.ehAdmin;
     }
 
     private void entrarCliente() {
@@ -127,24 +137,22 @@ public class Sessao {
                 break;
 
             case 4: // Entrar como Administrador
-                if(!estoque.getTemAdmin()) { // se a senha não foi definida
+                if(this.estoque.getQuantosFuncionarios() == 0) {
                     try {
-                        estoque.setSenhaAdmin(this.inputUsuario);
+                        this.coletarCadastroFuncionario();
+                        this.acessarFuncionario();
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
 
-                    } catch(IllegalArgumentException e) {
-                        System.out.println(e.getMessage());
-                    }
-                }
-                this.dormirAlgumTempo();
-                
-                if(estoque.getTemAdmin()) { // caso já tenha senha definida
+                } else {
                     try {
-                        estoque.entrarComoAdmin(this.inputUsuario);
-    
-                    } catch(IllegalArgumentException e) {
+                        this.acessarFuncionario();
+                    } catch (Exception e) {
                         System.out.println(e.getMessage());
                     }
                 }
+
                 break;
             
             case 5: // Parar o programa
@@ -235,12 +243,12 @@ public class Sessao {
                 break;
 
             case 7: // Deslogar
-                this.estoque.deslogarComoAdmin();
+                // this.estoque.deslogarComoAdmin();
                 break;
 
             case 8: // Mudar senha de administrador
                 try {
-                    estoque.setSenhaAdmin(this.inputUsuario);
+                    // estoque.setSenhaAdmin(this.inputUsuario);
 
                 } catch(IllegalArgumentException e) {
                     System.out.println(e.getMessage());
@@ -319,6 +327,36 @@ public class Sessao {
 
         this.dormirAlgumTempo();
         System.out.println("\nItem(ns) vendidos!");
+    }
+
+    private void coletarCadastroFuncionario() throws Exception {
+        this.dormirAlgumTempo();
+        System.out.println("Defina suas informações de usuário: ");
+        System.out.print("Login (de 6 a 12 caracteres): ");
+        String novoLogin = this.inputUsuario.nextLine();
+
+        System.out.print("Senha (4 digitos): ");
+        String novaSenha = this.inputUsuario.nextLine();
+
+        this.estoque.cadastrarFuncionario(novoLogin, novaSenha);
+
+        this.dormirAlgumTempo();
+        System.out.println("\nFuncionário cadastrado com sucesso!\n");
+    }
+
+    private void acessarFuncionario() throws Exception {
+        this.dormirAlgumTempo();
+        System.out.print("Login: ");
+        String login = this.inputUsuario.nextLine();
+
+        System.out.print("Senha: ");
+        String senha = this.inputUsuario.nextLine();
+
+        this.estoque.entrarComoFuncionario(login, senha);
+        this.setEhAdmin();
+
+        this.dormirAlgumTempo();
+        System.out.println("Login realizado com sucesso!");
     }
 
     // private void adicionarItemAoEstoque() {
