@@ -98,7 +98,7 @@ public class TelaLogin extends JFrame {
                 JButton mainButton = new JButton("DESCONECTAR");
                 Color buttonColor = new Color(0, 90, 190);
 
-                funcionarioFrame = new FuncionarioFrame(setor, imgSetor, mainButton, buttonColor, estoque);
+                funcionarioFrame = new FuncionarioFrame(setor, imgSetor, mainButton, buttonColor, estoque, cliente);
                 dispose();
             }
         });

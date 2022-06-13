@@ -68,7 +68,7 @@ public class ClienteFrame extends MainFrame {
 
                 modeloTabela = new DefaultTableModel(colunasTabela, 0);
                 tabelaProdutos = new JTable(modeloTabela);
-                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 200);
+                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 230);
                 JTableHeader header = tabelaProdutos.getTableHeader();
                 header.setBounds(10, 10, (frameWidth - 40), 20);
                 
@@ -101,7 +101,7 @@ public class ClienteFrame extends MainFrame {
 
                 modeloTabela = new DefaultTableModel(colunasTabela, 0);
                 tabelaProdutos = new JTable(modeloTabela);
-                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 200);
+                tabelaProdutos.setBounds(10, 30, (frameWidth - 40), 230);
                 JTableHeader header = tabelaProdutos.getTableHeader();
                 header.setBounds(10, 10, (frameWidth - 40), 20);
                 

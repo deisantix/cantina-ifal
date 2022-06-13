@@ -13,6 +13,9 @@ public class FuncionarioFrame extends MainFrame {
     private Estoque estoque;
     private ClienteFrame frameCliente;
 
+    private JOptionPane message;
+    private JDialog dialog;
+
     private String[] colunasTabela = {"CODIGO", "DESCRIÇÃO", "PREÇO", "QUANTIDADE"};
     private DefaultTableModel modeloTabela;
     private JTable tabelaProdutos;
@@ -29,10 +32,12 @@ public class FuncionarioFrame extends MainFrame {
         JLabel imgSetor, 
         JButton mainButton, 
         Color buttonColor, 
-        Estoque estoque
+        Estoque estoque,
+        ClienteFrame cfm
     ) {
         super(setor, imgSetor, mainButton, buttonColor);
         this.estoque = estoque;
+        this.message = new JOptionPane();
 
         // reconfigurando tamanho do painel de tabela
         this.painelLateral.setBounds(
@@ -107,6 +112,18 @@ public class FuncionarioFrame extends MainFrame {
         add(this.btnLucro);
 
         repaint();
+
+
+        this.mainButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                message.setMessage("O funcionário foi desconectado");
+                dialog = message.createDialog(null, "Aviso");
+                dialog.setVisible(true);
+
+                cfm.setVisible(true);
+                dispose();
+            }
+        });
 
         this.btnAdicionarItens.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -214,20 +231,20 @@ public class FuncionarioFrame extends MainFrame {
         });
     }
 
-    public static void main(String[] args) {
-        String setor = "Funcionário";
+    // public static void main(String[] args) {
+    //     String setor = "Funcionário";
 
-        Icon adm = new ImageIcon(Config.currentDir + "/assets/imgs/adm.png");
-        JLabel imgSetor = new JLabel(adm);
+    //     Icon adm = new ImageIcon(Config.currentDir + "/assets/imgs/adm.png");
+    //     JLabel imgSetor = new JLabel(adm);
 
-        JButton mainButton = new JButton("DESCONECTAR");
-        Color buttonColor = new Color(0, 90, 190);
+    //     JButton mainButton = new JButton("DESCONECTAR");
+    //     Color buttonColor = new Color(0, 90, 190);
 
-        try {
-            FuncionarioFrame funcionarioFrame = new FuncionarioFrame(setor, imgSetor, mainButton, buttonColor, new Estoque());
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-    }
+    //     try {
+    //         FuncionarioFrame funcionarioFrame = new FuncionarioFrame(setor, imgSetor, mainButton, buttonColor, new Estoque());
+    //     } catch (Exception ex) {
+    //         System.out.println(ex.getMessage());
+    //     }
+    // }
 
 }

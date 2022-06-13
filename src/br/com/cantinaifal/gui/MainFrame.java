@@ -82,7 +82,7 @@ public abstract class MainFrame extends JFrame {
             (this.frameWidth - 20), 270
         );
         this.painelLateral.setVisible(true);
-        this.painelLateral.setBackground(Color.BLUE);
+        // this.painelLateral.setBackground(Color.BLUE);
         add(this.painelLateral);
 
         setBackground(Color.WHITE);
